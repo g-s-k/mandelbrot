@@ -58,7 +58,7 @@ fn main() {
     }
 
     // write the results to file
-    write_image(&args[1], &img).expect("error writing PNG file");
+    img.to_file(&args[1]).expect("error writing PNG file");
 }
 
 /// Type representing a 2D image
@@ -76,6 +76,25 @@ impl<P: Default + Copy> Image<P> {
             height,
             pixels: vec![P::default(); width * height],
         }
+    }
+}
+
+impl Image<u8> {
+    /// Write the pixel array to a PNG file as 8-bit grayscale
+    fn to_file(
+        &self,
+        filename: &str,
+    ) -> Result<(), std::io::Error> {
+        let output = File::create(filename)?;
+        let encoder = PNGEncoder::new(output);
+        encoder.encode(
+            &self.pixels,
+            self.width as u32,
+            self.height as u32,
+            ColorType::Gray(8),
+        )?;
+
+        Ok(())
     }
 }
 
@@ -214,21 +233,4 @@ fn render(
             };
         }
     }
-}
-
-/// Write the pixel array to a PNG file as 8-bit grayscale
-fn write_image(
-    filename: &str,
-    img: &Image<u8>,
-) -> Result<(), std::io::Error> {
-    let output = File::create(filename)?;
-    let encoder = PNGEncoder::new(output);
-    encoder.encode(
-        &img.pixels,
-        img.width as u32,
-        img.height as u32,
-        ColorType::Gray(8),
-    )?;
-
-    Ok(())
 }
