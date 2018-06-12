@@ -1,11 +1,15 @@
+extern crate num;
+
+use num::Complex;
+
 fn main() {
     println!("This is a mandelbrot calculator, per the O'Reilly book.");
 }
 
-fn square_loop(c: f64) {
-    let mut x = 0.;
+fn square_loop(c: Complex<f64>) {
+    let mut z = Complex{ re: 0.0, im: 0.0 };
     loop {
-        x *= x;
-        x += c;
+        z *= z;
+        z += c;
     }
 }

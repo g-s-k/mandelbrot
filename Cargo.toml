@@ -4,3 +4,4 @@ version = "0.1.0"
 authors = ["George Kaplan"]
 
 [dependencies]
+num = "0.1.27"
