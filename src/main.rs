@@ -58,7 +58,7 @@ fn main() {
     }
 
     // write the results to file
-    write_image(&args[1], &img.pixels, bounds).expect("error writing PNG file");
+    write_image(&args[1], &img).expect("error writing PNG file");
 }
 
 /// Type representing a 2D image
@@ -219,15 +219,14 @@ fn render(
 /// Write the pixel array to a PNG file as 8-bit grayscale
 fn write_image(
     filename: &str,
-    pixels: &[u8],
-    bounds: (usize, usize),
+    img: &Image<u8>,
 ) -> Result<(), std::io::Error> {
     let output = File::create(filename)?;
     let encoder = PNGEncoder::new(output);
     encoder.encode(
-        &pixels,
-        bounds.0 as u32,
-        bounds.1 as u32,
+        &img.pixels,
+        img.width as u32,
+        img.height as u32,
         ColorType::Gray(8),
     )?;
 
