@@ -6,10 +6,16 @@ fn main() {
     println!("This is a mandelbrot calculator, per the O'Reilly book.");
 }
 
-fn square_loop(c: Complex<f64>) {
+fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
     let mut z = Complex{ re: 0.0, im: 0.0 };
-    loop {
+    for i in 0..limit {
         z *= z;
         z += c;
+
+        if z.norm_sqr() > 4.0 {
+            return Some(i);
+        }
     }
+
+    None
 }
