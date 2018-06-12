@@ -28,8 +28,8 @@ fn main() {
     let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
     let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
 
-    // make pixel buffer
-    let mut pixels = vec![0; bounds.0 * bounds.1];
+    // make image struct
+    let mut img = Image::new(bounds.0, bounds.1);
 
     // preliminary calculations for the thread pool
     let threads = num_cpus::get();
@@ -38,7 +38,7 @@ fn main() {
     // make a new scope to satisfy the borrow checker
     {
         // split the buffer into bands for the individual threads
-        let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();
+        let bands: Vec<&mut [u8]> = img.pixels.chunks_mut(rows_per_band * bounds.0).collect();
 
         // break it down by worker
         crossbeam::scope(|spawner| for (i, band) in bands.into_iter().enumerate() {
@@ -58,7 +58,25 @@ fn main() {
     }
 
     // write the results to file
-    write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
+    write_image(&args[1], &img.pixels, bounds).expect("error writing PNG file");
+}
+
+/// Type representing a 2D image
+struct Image<P> {
+    width: usize,
+    height: usize,
+    pixels: Vec<P>,
+}
+
+impl<P: Default + Copy> Image<P> {
+    /// Make a blank image
+    fn new(width: usize, height: usize) -> Self {
+        Image {
+            width,
+            height,
+            pixels: vec![P::default(); width * height],
+        }
+    }
 }
 
 /// Calculate how many iterations a complex number can withstand before
