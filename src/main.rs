@@ -60,33 +60,45 @@ fn main() {
     write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
 }
 
+/// Calculate how many iterations a complex number can withstand before
+/// flying out to infinity
 fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
+    // initial condition: zero
     let mut z = Complex { re: 0.0, im: 0.0 };
+
+    // iterate on this value until its magnitude exceeds 4.0
+    // (or up to the limit)
     for i in 0..limit {
         z *= z;
         z += c;
 
+        // report that the number has escaped
         if z.norm_sqr() > 4.0 {
             return Some(i);
         }
     }
 
+    // this number is in the Mandelbrot set (basically)
     None
 }
 
+/// Take a string which (presumably) has two numbers in it, separated by
+/// some known delimiter, and return the numbers as a tuple.
 fn parse_pair<T: FromStr>(s: &str, separator: char) -> Option<(T, T)> {
-    match s.find(separator) {
-        None => None,
-        Some(index) => {
-            if let (Ok(l), Ok(r)) = (T::from_str(&s[..index]), T::from_str(&s[index + 1..])) {
-                Some((l, r))
-            } else {
-                None
-            }
+    // try to find the delimiter
+    if let Some(index) = s.find(separator) {
+        // try to parse each side into your numeric type
+        if let (Ok(l), Ok(r)) = (T::from_str(&s[..index]), T::from_str(&s[index + 1..])) {
+            // this is the only success case
+            return Some((l, r));
         }
     }
+
+    // if the flow makes it down here, no dice.
+    None
 }
 
+/// A test for `parse_pair`.
 #[test]
 fn test_parse_pair() {
     assert_eq!(parse_pair::<i32>("", ','), None);
@@ -99,14 +111,19 @@ fn test_parse_pair() {
 }
 
 
+/// A specialized wrapper over `parse_pair` for complex numbers
 fn parse_complex(s: &str) -> Option<Complex<f64>> {
+    // try to get the real/imaginary parts out
     if let Some((re, im)) = parse_pair(s, ',') {
-        Some(Complex { re, im })
-    } else {
-        None
+        // give them back as a Complex struct
+        return Some(Complex { re, im });
     }
+
+    // the parse failed
+    None
 }
 
+/// A test for `parse_complex`
 #[test]
 fn test_parse_complex() {
     assert_eq!(
@@ -119,22 +136,27 @@ fn test_parse_complex() {
     assert_eq!(parse_complex(",-0.0625"), None);
 }
 
+/// Translate pixel locations to complex coordinates
 fn pixel_to_point(
     bounds: (usize, usize),
     pixel: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
 ) -> Complex<f64> {
+    // figure out the bounding dimensions in complex space
     let (width, height) = (
         lower_right.re - upper_left.re,
         upper_left.im - lower_right.im,
     );
+
+    // interpolate the real and imaginary portions
     Complex {
         re: upper_left.re + pixel.0 as f64 * width / bounds.0 as f64,
         im: upper_left.im - pixel.1 as f64 * height / bounds.1 as f64,
     }
 }
 
+/// A test for `pixel_to_point`
 #[test]
 fn test_pixel_to_point() {
     assert_eq!(
@@ -148,17 +170,24 @@ fn test_pixel_to_point() {
     );
 }
 
+/// Populate your pixels with the appropriate escape values
 fn render(
     pixels: &mut [u8],
     bounds: (usize, usize),
     upper_left: Complex<f64>,
     lower_right: Complex<f64>,
 ) {
+    // Ensure we have an appropriate number of pixels in our slice
     assert!(pixels.len() == bounds.0 * bounds.1);
 
+    // do each row
     for row in 0..bounds.1 {
+        // do each column
         for column in 0..bounds.0 {
+            // find the complex coordinates of this point
             let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
+
+            // figure out what color it should be and fill it in
             pixels[row * bounds.0 + column] = if let Some(count) = escape_time(point, 255) {
                 255 - count as u8
             } else {
@@ -168,6 +197,7 @@ fn render(
     }
 }
 
+/// Write the pixel array to a PNG file as 8-bit grayscale
 fn write_image(
     filename: &str,
     pixels: &[u8],
