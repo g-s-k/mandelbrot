@@ -9,8 +9,10 @@ use image::ColorType;
 use image::png::PNGEncoder;
 
 fn main() {
+    // get command line arguments
     let args: Vec<String> = std::env::args().collect();
 
+    // check that there are enough
     if args.len() != 5 {
         eprintln!("Usage: mandelbrot FILE PIXELS UPPERLEFT LOWERRIGHT");
         eprintln!(
@@ -20,18 +22,26 @@ fn main() {
         std::process::exit(0);
     }
 
+    // parse the arguments
     let bounds = parse_pair(&args[2], 'x').expect("error parsing image dimensions");
     let upper_left = parse_complex(&args[3]).expect("error parsing upper left corner point");
     let lower_right = parse_complex(&args[4]).expect("error parsing lower right corner point");
 
+    // make pixel buffer
     let mut pixels = vec![0; bounds.0 * bounds.1];
 
+    // preliminary calculations for the thread pool
     let threads = 8;
     let rows_per_band = bounds.1 / threads + 1;
 
+    // make a new scope to satisfy the borrow checker
     {
+        // split the buffer into bands for the individual threads
         let bands: Vec<&mut [u8]> = pixels.chunks_mut(rows_per_band * bounds.0).collect();
+
+        // break it down by worker
         crossbeam::scope(|spawner| for (i, band) in bands.into_iter().enumerate() {
+            // calculate parameters for this band
             let top = rows_per_band * i;
             let height = band.len() / bounds.0;
             let band_bounds = (bounds.0, height);
@@ -39,12 +49,14 @@ fn main() {
             let band_lower_right =
                 pixel_to_point(bounds, (bounds.0, top + height), upper_left, lower_right);
 
+            // let it loose on the actual work
             spawner.spawn(move || {
                 render(band, band_bounds, band_upper_left, band_lower_right);
             });
         });
     }
 
+    // write the results to file
     write_image(&args[1], &pixels, bounds).expect("error writing PNG file");
 }
 
