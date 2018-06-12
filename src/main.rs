@@ -1,6 +1,7 @@
 extern crate num;
 extern crate image;
 extern crate crossbeam;
+extern crate num_cpus;
 
 use std::str::FromStr;
 use std::fs::File;
@@ -31,7 +32,7 @@ fn main() {
     let mut pixels = vec![0; bounds.0 * bounds.1];
 
     // preliminary calculations for the thread pool
-    let threads = 8;
+    let threads = num_cpus::get();
     let rows_per_band = bounds.1 / threads + 1;
 
     // make a new scope to satisfy the borrow checker
