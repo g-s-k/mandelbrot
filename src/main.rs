@@ -3,10 +3,8 @@ extern crate image;
 extern crate rayon;
 
 use std::str::FromStr;
-use std::fs::File;
 use num::Complex;
 use image::ColorType;
-use image::png::PNGEncoder;
 use rayon::prelude::*;
 
 fn main() {
@@ -176,9 +174,8 @@ impl<P> std::ops::IndexMut<usize> for Image<P> {
 impl Image<u8> {
     /// Write the pixel array to a PNG file as 8-bit grayscale
     fn to_file(&self, filename: &str) -> Result<(), std::io::Error> {
-        let output = File::create(filename)?;
-        let encoder = PNGEncoder::new(output);
-        encoder.encode(
+        image::save_buffer(
+            filename,
             &self.pixels,
             self.width as u32,
             self.height as u32,
