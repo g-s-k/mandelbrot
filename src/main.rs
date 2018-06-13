@@ -76,7 +76,7 @@ struct Image<P> {
     pixels: Vec<P>,
 }
 
-impl<P: Default + Copy> Image<P> {
+impl<P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num> Image<P> {
     /// Make a blank image
     fn new(width: usize, height: usize) -> Self {
         Image {
@@ -85,9 +85,7 @@ impl<P: Default + Copy> Image<P> {
             pixels: vec![P::default(); width * height],
         }
     }
-}
 
-impl Image<u8> {
     /// Populate your pixels with the appropriate escape values
     fn render(&mut self, upper_left: Cplx64, lower_right: Cplx64) {
         // do each row
@@ -104,15 +102,17 @@ impl Image<u8> {
 
                 // figure out what color it should be and fill it in
                 self.pixels[row * self.width + column] =
-                    if let Some(count) = escape_time(point, 255) {
-                        255 - count as u8
+                    if let Some(count) = escape_time(point, P::max_value().to_u32().expect("error")) {
+                        P::max_value() - P::from_u32(count).expect("error")
                     } else {
-                        0
+                        P::default()
                     };
             }
         }
     }
+}
 
+impl Image<u8> {
     /// Write the pixel array to a PNG file as 8-bit grayscale
     fn to_file(&self, filename: &str) -> Result<(), std::io::Error> {
         let output = File::create(filename)?;
