@@ -31,6 +31,7 @@ fn main() {
     // make image struct
     let mut img = Image::new(bounds.0, bounds.1);
 
+    /*
     // preliminary calculations for the thread pool
     let threads = num_cpus::get();
     let rows_per_band = bounds.1 / threads + 1;
@@ -56,6 +57,10 @@ fn main() {
             });
         });
     }
+     */
+
+    // render image
+    img.render(upper_left, lower_right);
 
     // write the results to file
     img.to_file(&args[1]).expect("error writing PNG file");
@@ -80,6 +85,31 @@ impl<P: Default + Copy> Image<P> {
 }
 
 impl Image<u8> {
+    /// Populate your pixels with the appropriate escape values
+    fn render(&mut self, upper_left: Complex<f64>, lower_right: Complex<f64>) {
+        // do each row
+        for row in 0..self.height {
+            // do each column
+            for column in 0..self.width {
+                // find the complex coordinates of this point
+                let point = pixel_to_point(
+                    (self.width, self.height),
+                    (column, row),
+                    upper_left,
+                    lower_right,
+                );
+
+                // figure out what color it should be and fill it in
+                self.pixels[row * self.width + column] =
+                    if let Some(count) = escape_time(point, 255) {
+                        255 - count as u8
+                    } else {
+                        0
+                    };
+            }
+        }
+    }
+
     /// Write the pixel array to a PNG file as 8-bit grayscale
     fn to_file(
         &self,
@@ -206,31 +236,4 @@ fn test_pixel_to_point() {
         ),
         Complex { re: -0.5, im: -0.5 }
     );
-}
-
-/// Populate your pixels with the appropriate escape values
-fn render(
-    pixels: &mut [u8],
-    bounds: (usize, usize),
-    upper_left: Complex<f64>,
-    lower_right: Complex<f64>,
-) {
-    // Ensure we have an appropriate number of pixels in our slice
-    assert!(pixels.len() == bounds.0 * bounds.1);
-
-    // do each row
-    for row in 0..bounds.1 {
-        // do each column
-        for column in 0..bounds.0 {
-            // find the complex coordinates of this point
-            let point = pixel_to_point(bounds, (column, row), upper_left, lower_right);
-
-            // figure out what color it should be and fill it in
-            pixels[row * bounds.0 + column] = if let Some(count) = escape_time(point, 255) {
-                255 - count as u8
-            } else {
-                0
-            };
-        }
-    }
 }
