@@ -66,6 +66,9 @@ fn main() {
     img.to_file(&args[1]).expect("error writing PNG file");
 }
 
+/// Shorthand for long type name
+type Cplx64 = Complex<f64>;
+
 /// Type representing a 2D image
 struct Image<P> {
     width: usize,
@@ -86,7 +89,7 @@ impl<P: Default + Copy> Image<P> {
 
 impl Image<u8> {
     /// Populate your pixels with the appropriate escape values
-    fn render(&mut self, upper_left: Complex<f64>, lower_right: Complex<f64>) {
+    fn render(&mut self, upper_left: Cplx64, lower_right: Cplx64) {
         // do each row
         for row in 0..self.height {
             // do each column
@@ -127,7 +130,7 @@ impl Image<u8> {
 
 /// Calculate how many iterations a complex number can withstand before
 /// flying out to infinity
-fn escape_time(c: Complex<f64>, limit: u32) -> Option<u32> {
+fn escape_time(c: Cplx64, limit: u32) -> Option<u32> {
     // initial condition: zero
     let mut z = Complex { re: 0.0, im: 0.0 };
 
@@ -177,7 +180,7 @@ fn test_parse_pair() {
 
 
 /// A specialized wrapper over `parse_pair` for complex numbers
-fn parse_complex(s: &str) -> Option<Complex<f64>> {
+fn parse_complex(s: &str) -> Option<Cplx64> {
     // try to get the real/imaginary parts out
     if let Some((re, im)) = parse_pair(s, ',') {
         // give them back as a Complex struct
@@ -205,9 +208,9 @@ fn test_parse_complex() {
 fn pixel_to_point(
     bounds: (usize, usize),
     pixel: (usize, usize),
-    upper_left: Complex<f64>,
-    lower_right: Complex<f64>,
-) -> Complex<f64> {
+    upper_left: Cplx64,
+    lower_right: Cplx64,
+) -> Cplx64 {
     // figure out the bounding dimensions in complex space
     let (width, height) = (
         lower_right.re - upper_left.re,
