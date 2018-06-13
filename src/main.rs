@@ -141,24 +141,40 @@ where
         }
     }
 
+    /// Turn an image into a series of index pairs
+    fn get_indices(&self) -> Vec<(usize, usize)> {
+        // pre-allocate vectors for row and column coordinates
+        let mut cols = Vec::with_capacity(self.pixels.len());
+        let mut rows = Vec::with_capacity(self.pixels.len());
+
+        // put the values in
+        for row in 0..self.height {
+            cols.extend((0..self.width).collect::<Vec<usize>>());
+            rows.extend(vec![row; self.width]);
+        }
+
+        // zip 'em up
+        cols.into_iter().zip(rows.into_iter()).collect()
+    }
+
     /// Populate your pixels with the appropriate escape values
     fn render(&mut self, upper_left: Cplx64, lower_right: Cplx64) {
-        // do each row
-        for row in 0..self.height {
-            // do each column
-            for column in 0..self.width {
-                // find the complex coordinates of this point
-                let point = pixel_to_point(
-                    (self.width, self.height),
-                    (column, row),
-                    upper_left,
-                    lower_right,
-                );
+        // get column/row indices for each point in the map
+        let indices = self.get_indices();
 
-                // figure out what color it should be and fill it in
-                self[row][column] = point.escape_color();
-            }
-        }
+        // get complex coordinates from each index pair
+        let points: Vec<Cplx64> = indices
+            .into_iter()
+            .map(|coords| {
+                pixel_to_point((self.width, self.height), coords, upper_left, lower_right)
+            })
+            .collect();
+
+        // get the appropriate colors from the complex values
+        self.pixels = points
+            .into_iter()
+            .map(|point| point.escape_color())
+            .collect();
     }
 }
 
