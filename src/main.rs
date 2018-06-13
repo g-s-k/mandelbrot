@@ -111,10 +111,7 @@ impl Image<u8> {
     }
 
     /// Write the pixel array to a PNG file as 8-bit grayscale
-    fn to_file(
-        &self,
-        filename: &str,
-    ) -> Result<(), std::io::Error> {
+    fn to_file(&self, filename: &str) -> Result<(), std::io::Error> {
         let output = File::create(filename)?;
         let encoder = PNGEncoder::new(output);
         encoder.encode(
