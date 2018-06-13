@@ -76,7 +76,9 @@ struct Image<P> {
     pixels: Vec<P>,
 }
 
-impl<P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num> Image<P> {
+impl<P> Image<P>
+    where P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num
+{
     /// Make a blank image
     fn new(width: usize, height: usize) -> Self {
         Image {
@@ -101,12 +103,7 @@ impl<P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + 
                 );
 
                 // figure out what color it should be and fill it in
-                self[row][column] =
-                    if let Some(count) = escape_time(point, P::max_value().to_u32().expect("error")) {
-                        P::max_value() - P::from_u32(count).expect("error")
-                    } else {
-                        P::default()
-                    };
+                self[row][column] = point_to_esc(point);
             }
         }
     }
@@ -164,6 +161,18 @@ fn escape_time(c: Cplx64, limit: u32) -> Option<u32> {
 
     // this number is in the Mandelbrot set (basically)
     None
+}
+
+/// Take a complex point and determine its display color
+fn point_to_esc<P>(c: Cplx64) -> P
+    where P: Default + num::Num + num::FromPrimitive + num::ToPrimitive + num::Bounded
+{
+    let limit = P::max_value().to_u32().unwrap();
+    if let Some(count) = escape_time(c, limit) {
+        P::max_value() - P::from_u32(count).unwrap()
+    } else {
+        P::default()
+    }
 }
 
 /// Take a string which (presumably) has two numbers in it, separated by
