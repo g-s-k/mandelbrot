@@ -155,22 +155,6 @@ where
     }
 }
 
-impl<P> std::ops::Index<usize> for Image<P> {
-    type Output = [P];
-
-    fn index(&self, row: usize) -> &[P] {
-        let start = row * self.width;
-        &self.pixels[start..start + self.width]
-    }
-}
-
-impl<P> std::ops::IndexMut<usize> for Image<P> {
-    fn index_mut(&mut self, row: usize) -> &mut [P] {
-        let start = row * self.width;
-        &mut self.pixels[start..start + self.width]
-    }
-}
-
 impl Image<u8> {
     /// Write the pixel array to a PNG file as 8-bit grayscale
     fn to_file(&self, filename: &str) -> Result<(), std::io::Error> {
