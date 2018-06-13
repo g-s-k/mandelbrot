@@ -102,7 +102,14 @@ struct Image<P> {
 
 impl<P> Image<P>
 where
-    P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num + Send + Sync,
+    P: Default
+        + Copy
+        + num::Bounded
+        + num::FromPrimitive
+        + num::ToPrimitive
+        + num::Num
+        + Send
+        + Sync,
 {
     /// Make a blank image
     fn new(width: usize, height: usize) -> Self {
