@@ -2,12 +2,14 @@ extern crate num;
 extern crate image;
 extern crate crossbeam;
 extern crate num_cpus;
+extern crate rayon;
 
 use std::str::FromStr;
 use std::fs::File;
 use num::Complex;
 use image::ColorType;
 use image::png::PNGEncoder;
+use rayon::prelude::*;
 
 fn main() {
     // get command line arguments
@@ -130,7 +132,7 @@ struct Image<P> {
 
 impl<P> Image<P>
 where
-    P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num,
+    P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + num::Num + Send + Sync,
 {
     /// Make a blank image
     fn new(width: usize, height: usize) -> Self {
@@ -164,7 +166,7 @@ where
 
         // get complex coordinates from each index pair
         let points: Vec<Cplx64> = indices
-            .into_iter()
+            .into_par_iter()
             .map(|coords| {
                 pixel_to_point((self.width, self.height), coords, upper_left, lower_right)
             })
@@ -172,7 +174,7 @@ where
 
         // get the appropriate colors from the complex values
         self.pixels = points
-            .into_iter()
+            .into_par_iter()
             .map(|point| point.escape_color())
             .collect();
     }
