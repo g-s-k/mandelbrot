@@ -120,18 +120,21 @@ where
 
     /// Turn an image into a series of index pairs
     fn get_indices(&self) -> Vec<(usize, usize)> {
-        // vectors of row and column coordinates
-        let cols = (0..self.width)
+        /* This 2D array is in row-major order.
+         * Row indices are in blocks, and increment once per row.
+         * Column indices repeatedly increase from (0) to (width-1).
+         */
+
+        // column index
+        (0..self.width)
             .cycle()
             .take(self.pixels.len())
-            .collect::<Vec<usize>>();
-
-        let rows = (0..self.height)
-            .flat_map(|elem| std::iter::repeat(elem).take(self.width))
-            .collect::<Vec<usize>>();
-
-        // zip 'em up
-        cols.into_iter().zip(rows.into_iter()).collect()
+            // zipped with row index
+            .zip((0..self.height).flat_map(|elem| {
+                std::iter::repeat(elem).take(self.width)
+            }))
+            // collected as tuples
+            .collect()
     }
 
     /// Populate your pixels with the appropriate escape values
