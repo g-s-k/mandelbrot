@@ -1,7 +1,5 @@
 extern crate num;
 extern crate image;
-extern crate crossbeam;
-extern crate num_cpus;
 extern crate rayon;
 
 use std::str::FromStr;
@@ -32,34 +30,6 @@ fn main() {
 
     // make image struct
     let mut img = Image::new(bounds.0, bounds.1);
-
-    /*
-    // preliminary calculations for the thread pool
-    let threads = num_cpus::get();
-    let rows_per_band = bounds.1 / threads + 1;
-
-    // make a new scope to satisfy the borrow checker
-    {
-        // split the buffer into bands for the individual threads
-        let bands: Vec<&mut [u8]> = img.pixels.chunks_mut(rows_per_band * bounds.0).collect();
-
-        // break it down by worker
-        crossbeam::scope(|spawner| for (i, band) in bands.into_iter().enumerate() {
-            // calculate parameters for this band
-            let top = rows_per_band * i;
-            let height = band.len() / bounds.0;
-            let band_bounds = (bounds.0, height);
-            let band_upper_left = pixel_to_point(bounds, (0, top), upper_left, lower_right);
-            let band_lower_right =
-                pixel_to_point(bounds, (bounds.0, top + height), upper_left, lower_right);
-
-            // let it loose on the actual work
-            spawner.spawn(move || {
-                render(band, band_bounds, band_upper_left, band_lower_right);
-            });
-        });
-    }
-     */
 
     // render image
     img.render(upper_left, lower_right);
