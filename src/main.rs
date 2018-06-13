@@ -66,8 +66,60 @@ fn main() {
     img.to_file(&args[1]).expect("error writing PNG file");
 }
 
+trait Mandelbrot {
+    fn escape_time(self, limit: u32) -> Option<u32>;
+}
+
+trait ToColor<ColorOut>: Mandelbrot {
+    fn escape_color(self) -> ColorOut;
+}
+
 /// Shorthand for long type name
 type Cplx64 = Complex<f64>;
+
+
+impl Mandelbrot for Cplx64 {
+    /// Calculate how many iterations a complex number can withstand before
+    /// flying out to infinity
+    fn escape_time(self, limit: u32) -> Option<u32> {
+        // initial condition: zero
+        let mut z = Complex { re: 0.0, im: 0.0 };
+
+        // iterate on this value until its magnitude exceeds 4.0
+        // (or up to the limit)
+        for i in 0..limit {
+            z *= z;
+            z += self;
+
+            // report that the number has escaped
+            if z.norm_sqr() > 4.0 {
+                return Some(i);
+            }
+        }
+
+        // this number is in the Mandelbrot set (basically)
+        None
+    }
+}
+
+impl<P> ToColor<P> for Cplx64
+where
+    P: Default
+        + num::Num
+        + num::FromPrimitive
+        + num::ToPrimitive
+        + num::Bounded,
+{
+    /// Take a point and determine its display color
+    fn escape_color(self) -> P {
+        let limit = P::max_value().to_u32().unwrap();
+        if let Some(count) = self.escape_time(limit) {
+            P::max_value() - P::from_u32(count).unwrap()
+        } else {
+            P::default()
+        }
+    }
+}
 
 /// Type representing a 2D image
 struct Image<P> {
@@ -104,7 +156,7 @@ where
                 );
 
                 // figure out what color it should be and fill it in
-                self[row][column] = point_to_esc(point);
+                self[row][column] = point.escape_color();
             }
         }
     }
@@ -139,40 +191,6 @@ impl Image<u8> {
         )?;
 
         Ok(())
-    }
-}
-
-/// Calculate how many iterations a complex number can withstand before
-/// flying out to infinity
-fn escape_time(c: Cplx64, limit: u32) -> Option<u32> {
-    // initial condition: zero
-    let mut z = Complex { re: 0.0, im: 0.0 };
-
-    // iterate on this value until its magnitude exceeds 4.0
-    // (or up to the limit)
-    for i in 0..limit {
-        z *= z;
-        z += c;
-
-        // report that the number has escaped
-        if z.norm_sqr() > 4.0 {
-            return Some(i);
-        }
-    }
-
-    // this number is in the Mandelbrot set (basically)
-    None
-}
-
-/// Take a complex point and determine its display color
-fn point_to_esc<P>(c: Cplx64) -> P
-    where P: Default + num::Num + num::FromPrimitive + num::ToPrimitive + num::Bounded
-{
-    let limit = P::max_value().to_u32().unwrap();
-    if let Some(count) = escape_time(c, limit) {
-        P::max_value() - P::from_u32(count).unwrap()
-    } else {
-        P::default()
     }
 }
 
