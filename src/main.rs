@@ -101,7 +101,7 @@ impl<P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + 
                 );
 
                 // figure out what color it should be and fill it in
-                self.pixels[row * self.width + column] =
+                self[row][column] =
                     if let Some(count) = escape_time(point, P::max_value().to_u32().expect("error")) {
                         P::max_value() - P::from_u32(count).expect("error")
                     } else {
@@ -109,6 +109,22 @@ impl<P: Default + Copy + num::Bounded + num::FromPrimitive + num::ToPrimitive + 
                     };
             }
         }
+    }
+}
+
+impl<P> std::ops::Index<usize> for Image<P> {
+    type Output = [P];
+
+    fn index(&self, row: usize) -> &[P] {
+        let start = row * self.width;
+        &self.pixels[start .. start + self.width]
+    }
+}
+
+impl<P> std::ops::IndexMut<usize> for Image<P> {
+    fn index_mut(&mut self, row: usize) -> &mut [P] {
+        let start = row * self.width;
+        &mut self.pixels[start .. start + self.width]
     }
 }
 
