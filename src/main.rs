@@ -120,15 +120,15 @@ where
 
     /// Turn an image into a series of index pairs
     fn get_indices(&self) -> Vec<(usize, usize)> {
-        // pre-allocate vectors for row and column coordinates
-        let mut cols = Vec::with_capacity(self.pixels.len());
-        let mut rows = Vec::with_capacity(self.pixels.len());
+        // vectors of row and column coordinates
+        let cols = (0..self.width)
+            .cycle()
+            .take(self.pixels.len())
+            .collect::<Vec<usize>>();
 
-        // put the values in
-        for row in 0..self.height {
-            cols.extend((0..self.width).collect::<Vec<usize>>());
-            rows.extend(vec![row; self.width]);
-        }
+        let rows = (0..self.height)
+            .flat_map(|elem| std::iter::repeat(elem).take(self.width))
+            .collect::<Vec<usize>>();
 
         // zip 'em up
         cols.into_iter().zip(rows.into_iter()).collect()
