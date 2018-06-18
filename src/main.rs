@@ -125,15 +125,17 @@ where
          * Column indices repeatedly increase from (0) to (width-1).
          */
 
-        // column index
-        (0..self.width)
-            .cycle()
-            .take(self.pixels.len())
-            // zipped with row index
-            .zip((0..self.height).flat_map(|elem| {
-                std::iter::repeat(elem).take(self.width)
-            }))
-            // collected as tuples
+        // for each row
+        (0..self.height)
+            .flat_map(|elem| {
+                // repeat row index infinitely
+                std::iter::repeat(elem)
+                    // stop at the width
+                    .take(self.width)
+                    // pair it off with column indices
+                    .enumerate()
+            })
+            // collect vector of tuples
             .collect()
     }
 
